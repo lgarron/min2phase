@@ -8,3 +8,4 @@ Using [j2objc](http://code.google.com/p/j2objc/).
 - Some I/O and threading code removed from `Tools.java` to help cross-compilation.
 - `J2OBJC_DISTRIBUTION` has to be set in `test-objc.sh`
 - Only tested on OSX.
+- To get the objective C files, comment the appropriate line in `test-objc.sh`.
