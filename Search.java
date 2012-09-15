@@ -14,7 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cs.min2phase;
 
 /**
  * Rubik's Cube Solver.<br>
@@ -141,6 +140,15 @@ public class Search {
 		this.solution = null;
 		return solve(cc);
 	}
+
+	int indexInString(String str, char c) {
+		for (int i = 0; i < str.length(); i++) {
+			if (str.charAt(i) == c) {
+				return i;
+			}
+		}
+		return -1;
+	}
 	
 	int verify(String facelets) {
 		int count = 0x000000;
@@ -154,7 +162,7 @@ public class Search {
 				facelets.charAt(49)
 			});
 			for (int i=0; i<54; i++) {
-				f[i] = (byte) center.indexOf(facelets.charAt(i));
+				f[i] = (byte) indexInString(center, facelets.charAt(i));
 				if (f[i] == -1) {
 					return -1;
 				}

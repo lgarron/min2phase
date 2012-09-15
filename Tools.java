@@ -1,8 +1,5 @@
-package cs.min2phase;
 
 import java.util.Random;
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 /**
@@ -16,46 +13,6 @@ public class Tools implements Runnable {
 	
 	private static Random gen = new Random();
 
-	private static void read(char[] arr, DataInput in) throws IOException {
-		for (int i=0, len=arr.length; i<len; i++) {
-			arr[i] = in.readChar();
-		}
-	}
-	
-	private static void read(int[] arr, DataInput in) throws IOException {
-		for (int i=0, len=arr.length; i<len; i++) {
-			arr[i] = in.readInt();
-		}
-	}
-
-	private static void read(char[][] arr, DataInput in) throws IOException {
-		for (int i=0, leng=arr.length; i<leng; i++) {
-			for (int j=0, len=arr[i].length; j<len; j++) {
-				arr[i][j] = in.readChar();
-			}
-		}	
-	}
-	
-	private static void write(char[] arr, DataOutput out) throws IOException {
-		for (int i=0, len=arr.length; i<len; i++) {
-			out.writeChar(arr[i]);
-		}
-	}
-	
-	private static void write(int[] arr, DataOutput out) throws IOException {
-		for (int i=0, len=arr.length; i<len; i++) {
-			out.writeInt(arr[i]);
-		}
-	}
-
-	private static void write(char[][] arr, DataOutput out) throws IOException {
-		for (int i=0, leng=arr.length; i<leng; i++) {
-			for (int j=0, len=arr[i].length; j<len; j++) {
-				out.writeChar(arr[i][j]);
-			}
-		}	
-	}
-	
 	private static int[] initState = new int[2];
 	private static int[] require = {0x0, 0x1, 0x2, 0x2,  0x2, 0x7, 0xa, 0x3,  0x13, 0x13, 0x3, 0x6e,  0xca, 0xa6, 0x612, 0x512};
 	
@@ -103,13 +60,6 @@ public class Tools implements Runnable {
 					}
 				}
 				if (choice == -1) {
-					try {
-						initState.wait();
-						continue;
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						System.exit(1);
-					}
 				}
 			}
 			long t = System.nanoTime();
@@ -117,26 +67,20 @@ public class Tools implements Runnable {
 			System.out.println(choice + "\t" + (System.nanoTime() - t));
 			synchronized (initState) {
 				initState[1] |= 1 << choice;
-				initState.notifyAll();
 			}
 		}	
 	}
 	
-	private static void initParallel(int N_thread) {
+	private static void initParallel(int NOT_REALLY_thread) {
+
+		int N_thread = 1;
+
 		Thread[] initThreads = new Thread[N_thread-1];
 		for (int i=0; i<N_thread-1; i++) {
 			initThreads[i] = new Thread(new Tools());
 			initThreads[i].start();
 		}
 		new Tools().run();
-		try {
-			for (int i=0; i<N_thread-1; i++) {
-				initThreads[i].join();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
 	}
 	
 	/**
@@ -163,74 +107,6 @@ public class Tools implements Runnable {
 	 */
 	public static boolean isInited() {
 		return inited;
-	}
-	
-	/**
-	 * initializing from cached tables(move table, pruning table, etc.)
-	 *
-	 * @param in
-	 *     Where to read tables.
-	 *
-	 * @see cs.min2phase.Tools#saveTo(java.io.DataOutput)
-	 */	
-	public static void initFrom(DataInput in) throws IOException {
-		if (inited) {
-			return;
-		}
-		read(CubieCube.FlipS2R, in);
-		read(CubieCube.TwistS2R, in);
-		read(CubieCube.EPermS2R, in);
-		read(CubieCube.MtoEPerm, in);
-		read(CoordCube.TwistMove, in);
-		read(CoordCube.FlipMove, in);
-		read(CoordCube.UDSliceMove, in);
-		read(CoordCube.UDSliceConj, in);
-		read(CoordCube.CPermMove, in);
-		read(CoordCube.EPermMove, in);
-		read(CoordCube.MPermMove, in);
-		read(CoordCube.MPermConj, in);
-		read(CoordCube.UDSliceTwistPrun, in);
-		read(CoordCube.UDSliceFlipPrun, in);
-		read(CoordCube.MCPermPrun, in);
-		read(CoordCube.MEPermPrun, in);
-		if (USE_TWIST_FLIP_PRUN) {
-			read(CoordCube.TwistFlipPrun, in);
-		}
-		CubieCube.initMove();
-		CubieCube.initSym();
-		inited = true;
-	}
-	
-	/**
-	 * cache tables (move tables, pruning table, etc.), and read it while initializing.
-	 *
-	 * @param out
-	 *     Where to cache tables.
-	 *
-	 * @see cs.min2phase.Tools#initFrom(java.io.DataInput)
-	 */
-	public static void saveTo(DataOutput out) throws IOException {
-		init();
-		write(CubieCube.FlipS2R, out);			//       672 Bytes
-		write(CubieCube.TwistS2R, out);			// +     648 Bytes
-		write(CubieCube.EPermS2R, out);			// +   5, 536 Bytes
-		write(CubieCube.MtoEPerm, out);			// +  80, 640 Bytes
-		write(CoordCube.TwistMove, out);		// +  11, 664 Bytes
-		write(CoordCube.FlipMove, out);			// +  12, 096 Bytes
-		write(CoordCube.UDSliceMove, out);		// +  17, 820 Bytes
-		write(CoordCube.UDSliceConj, out);		// +   7, 920 Bytes
-		write(CoordCube.CPermMove, out);		// +  99, 648 Bytes
-		write(CoordCube.EPermMove, out);		// +  55, 360 Bytes
-		write(CoordCube.MPermMove, out);		// +     480 Bytes
-		write(CoordCube.MPermConj, out);		// +     768 Bytes
-		write(CoordCube.UDSliceTwistPrun, out);	// +  80, 192 Bytes
-		write(CoordCube.UDSliceFlipPrun, out);	// +  83, 160 Bytes
-		write(CoordCube.MCPermPrun, out);		// +  33, 216 Bytes
-		write(CoordCube.MEPermPrun, out);		// +  33, 216 Bytes
-												// = 523, 036 Bytes
-		if (USE_TWIST_FLIP_PRUN) {
-			write(CoordCube.TwistFlipPrun, out);// + 435, 456 Bytes
-		}										// = 958, 492 Bytes
 	}
 	
 	/**

@@ -1,4 +1,3 @@
-package cs.min2phase;
 
 import java.util.Random;
 
